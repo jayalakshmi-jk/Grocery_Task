@@ -1,4 +1,3 @@
-
 let btn = document.querySelector(".submit-btn");
 let clear = document.querySelector(".clear-btn");
 
@@ -24,16 +23,16 @@ btn.addEventListener("click", (e) => {
   } else {
     let list = document.querySelector(".grocery-list");
     let li = document.createElement("li");
-    
+
     li.classList.add("grocery-item");
     list.appendChild(li);
-  
+
     li.innerHTML = ` <p class="text">${input}</p>
     <div><button class="edit-btn">Edit</button>
     <button class="delete-btn">Delete</button></div>`;
 
     //store the data in localStorage
-    let previous=JSON.parse(localStorage.getItem("items")) || [];
+    let previous = JSON.parse(localStorage.getItem("items")) || [];
     // console.log(previous)
     previous.push(input);
     // console.log(previous)
@@ -44,21 +43,26 @@ btn.addEventListener("click", (e) => {
 
     //Edit Button
     edit.addEventListener("click", () => {
-      document.querySelector("grocery").value = li.innerText
+      let text = li.querySelector(".text");
+      document.getElementById("grocery").value = text.textContent;
       btn.textContent = "Edit";
-      li.remove()
+      li.remove();
 
-      //alert message - Edit
-      document.querySelector(".alert").innerHTML = ""
-      
+      // SUCCESS message
+      let alert = document.querySelector(".alert");
+      alert.innerHTML = "Item Edited Successfully";
+      alert.classList.add("alert-success");
+      alert.classList.remove("alert-danger");
 
-
+      setTimeout(() => {
+        alert.innerHTML = "";
+        alert.classList.remove("alert-success");
+      }, 2000);
     });
+    btn.textContent = "Submit";
 
     //Delete Button
     del.addEventListener("click", () => {
-      // li.classList.remove("grocery-item")
-      // let text = document.querySelector(".text")
       li.remove();
     });
 
@@ -82,5 +86,3 @@ btn.addEventListener("click", (e) => {
     });
   }
 });
-
-
