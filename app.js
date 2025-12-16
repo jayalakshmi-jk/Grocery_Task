@@ -1,88 +1,158 @@
+let alert = document.querySelector(".alert");
+let form = document.querySelector(".grocery-form");
 let btn = document.querySelector(".submit-btn");
+let input = document.getElementById("grocery");
+let list = document.querySelector(".grocery-list");
 let clear = document.querySelector(".clear-btn");
 
-document.querySelector(".clear-btn").style.display = "none";
+clear.style.display = "none";
 
-btn.addEventListener("click", (e) => {
+window.onload = () => {
+  let i = getStorage();
+  i.forEach((e) => {
+    createList(e.id, e.val);
+  });
+};
+
+let editFlag = false;
+let editEl;
+let editId = "";
+
+form.addEventListener("submit", addItem);
+clear.addEventListener("click", clearItem);
+
+//add item
+function addItem(e) {
   e.preventDefault();
+  let input = document.getElementById("grocery");
+  let val = input.value;
+  // console.log(val);
 
-  let input = document.getElementById("grocery").value.trim();
-  if (input === "") {
-    let alert = document.querySelector(".alert");
-    document.querySelector(".alert").innerHTML = "Please Enter the Item!!!";
+  let id = Date.now();
+  // console.log(id);
 
-    alert.classList.add("alert-danger");
-    alert.classList.remove(".alert-success ");
+  if (val && !editFlag) {
+    addStorage(id, val);
+    createList(id, val);
+    setDefault();
+    disAlert("Item Added Successfully!!", "alert-success");
+    clear.style.display = "block";
+  } else if (val && editFlag) {
+    editEl.innerHTML = val;
 
-    document.getElementById("grocery").value = "";
-
-    setTimeout(() => {
-      document.querySelector(".alert").innerHTML = "";
-      alert.classList.remove(".alert-danger");
-    }, 2000);
+    let items = getStorage();
+    items.forEach((i) => {
+      if (editId == i.id) {
+        i.val = input.value;
+      }
+    });
+    localStorage.setItem("items", JSON.stringify(items));
+    disAlert("Updated Successfully!!", "alert-success");
+    setDefault();
   } else {
-    let list = document.querySelector(".grocery-list");
-    let li = document.createElement("li");
-
-    li.classList.add("grocery-item");
-    list.appendChild(li);
-
-    li.innerHTML = ` <p class="text">${input}</p>
-    <div><button class="edit-btn">Edit</button>
-    <button class="delete-btn">Delete</button></div>`;
-
-    //store the data in localStorage
-    let previous = JSON.parse(localStorage.getItem("items")) || [];
-    // console.log(previous)
-    previous.push(input);
-    // console.log(previous)
-    localStorage.setItem("items", JSON.stringify(previous));
-
-    let edit = li.querySelector(".edit-btn");
-    let del = li.querySelector(".delete-btn");
-
-    //Edit Button
-    edit.addEventListener("click", () => {
-      let text = li.querySelector(".text");
-      document.getElementById("grocery").value = text.textContent;
-      btn.textContent = "Edit";
-      li.remove();
-
-      // SUCCESS message
-      let alert = document.querySelector(".alert");
-      alert.innerHTML = "Item Edited Successfully";
-      alert.classList.add("alert-success");
-      alert.classList.remove("alert-danger");
-
-      setTimeout(() => {
-        alert.innerHTML = "";
-        alert.classList.remove("alert-success");
-      }, 2000);
-    });
-    btn.textContent = "Submit";
-
-    //Delete Button
-    del.addEventListener("click", () => {
-      li.remove();
-    });
-
-    //display success message
-    document.getElementById("grocery").value = "";
-    let alert = document.querySelector(".alert");
-    document.querySelector(".alert").innerHTML = "Added Item Successfully";
-    alert.classList.add("alert-success");
-    alert.classList.remove("alert-danger");
-    document.querySelector(".clear-btn").style.display = "block";
-
-    setTimeout(() => {
-      document.querySelector(".alert").innerHTML = "";
-      alert.classList.remove("alert-success");
-    }, 2000);
-
-    //Clear the Items
-    clear.addEventListener("click", () => {
-      //  li.innerHTML = ""
-      list.removeChild(li);
-    });
+    disAlert("Please Enter the Item!!", "alert-danger");
   }
-});
+  input.value = "";
+}
+
+//clear items
+function clearItem() {
+  localStorage.removeItem("items");
+  list.innerHTML = "";
+  disAlert("Empty List!!", "alert-danger");
+}
+
+//alert message
+function disAlert(message, type) {
+  alert.innerHTML = message;
+  alert.classList.add(type);
+
+  setTimeout(() => {
+    alert.innerHTML = "";
+    alert.classList.remove(type);
+  }, 3000);
+}
+
+function createList(id, val) {
+  let el = document.createElement("article");
+  el.setAttribute("data-id", id);
+  el.classList.add("grocery-item");
+
+  el.innerHTML = `
+  <p class="title">${val}</p>
+  <div >
+  <button class="edit"><img src="edit.svg"></button>
+  <button class="del"><img src="trash-2.svg"></button>
+  </div>`;
+  let edit = el.querySelector(".edit");
+  let del = el.querySelector(".del");
+
+  edit.addEventListener("click", editItem);
+  del.addEventListener("click", delItem);
+
+  list.appendChild(el);
+}
+
+function editItem(e) {
+  let data = e.currentTarget.parentElement.parentElement;
+  // console.log(data);
+  editEl = data.querySelector(".title");
+  document.getElementById("grocery").value = editEl.innerHTML;
+
+  // console.log(editId);
+  // editEl.innerHTML = input.value
+  editFlag = true;
+  editId = data.dataset.id;
+  btn.textContent = "Edit";
+
+  // setDefault()
+}
+
+// function editStorage(id,val){
+//   let da = getStorage()
+//   for(let i=0;i<da.length;i++){
+//     if(da.id==id){
+//       da.val=val
+//        localStorage.setItem("items", JSON.stringify(da));
+
+//     }
+//   }
+//   return da
+
+// }
+
+function delItem(e) {
+  let item = e.currentTarget.parentElement.parentElement;
+  // console.log(item);
+  let d = getStorage();
+  let did = Number(item.dataset.id);
+  //  console.log(did);
+
+  for (i = 0; i < d.length; i++) {
+    if (d[i].id == did) {
+      d.splice(i, 1);
+      break;
+    }
+  }
+  localStorage.setItem("items", JSON.stringify(d));
+  //ui delete
+  item.remove();
+
+  disAlert("Item Deleted Successfully!!", "alert-success");
+}
+
+function setDefault() {
+  editFlag = false;
+  editId = "";
+  btn.textContent = "Submit";
+}
+
+function getStorage() {
+  return JSON.parse(localStorage.getItem("items")) || [];
+}
+function addStorage(id, val) {
+  let item = getStorage();
+  let obj = { id, val };
+  item.push(obj);
+  localStorage.setItem("items", JSON.stringify(item));
+}
